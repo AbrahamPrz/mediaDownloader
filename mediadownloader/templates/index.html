@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media downloader</title>
+</head>
+
+<body>
+    <div>
+        <h1>MP4 & MP3 downloader</h1>
+
+        <p>{{msg}}</p>
+
+        <form action="" method="POST">
+            {% csrf_token %}
+
+            <label for="link">Enter URL: </label>
+            <input type="text" name="link"><br><br>
+            <button type="submit" name="mp4" onclick="mp4()">Download MP4</button>
+            <button type="submit" name="mp3" onclick="mp3()">Download MP3</button>
+
+        </form>
+        <script>
+            function mp4(){
+                console.log("MP4")
+                // document.getElementById("message").innerHTML = "Downloading...";
+            }
+
+            function mp3(){
+                console.log("MP3")
+                // document.getElementById("message").innerHTML = "Downloading...";
+            }
+        </script>
+    </div>
+</body>
+</html>
