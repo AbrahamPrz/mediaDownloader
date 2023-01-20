@@ -3,8 +3,16 @@ from django.shortcuts import render
 import pexpect
 import os
 import re
-from yt_dlp import YoutubeDL
+from yt_dlp import YoutubeDL # https://github.com/yt-dlp/yt-dlp#embedding-yt-dlp
 import subprocess
+
+def my_hook(d):
+    if d['status'] == 'finished':
+        file_tuple = os.path.split(os.path.abspath(d['filename']))
+        print("Done downloading {}".format(file_tuple[1])) # print()
+    if d['status'] == 'downloading':
+        download_progress = str(d['_percent_str'])
+        print(download_progress)
 
 # Source: https://regex101.com/r/vHEc61/1
 YOUTUBE_REGEX = r'^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$'
@@ -12,6 +20,21 @@ YOUTUBE_REGEX = r'^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com
 FACEBOOK_REGEX = r'^https?:\/\/www\.facebook\.com.*\/(video(s)?|watch|story)(\.php?|\/).+$'
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+MP4_YTDLP_OPTIONS = {'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4', 
+    'outtmpl': 'video/%(title)s', 
+    'progress_hooks': [my_hook],
+    'quiet': True,
+    # '-loglevel': 'panic',
+    'progress': True,
+}
+MP3_YTDLP_OPTIONS = {
+    'format': 'mp3/bestaudio/best',
+    'postprocessors': [{  # Extract audio using ffmpeg
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+    }]
+}
 
 
 def main(request):
@@ -31,49 +54,36 @@ def main(request):
             if 'mp4' in request.POST:
                     print('MP4 FORMAT')
                     print(BASE_DIR)
-                    mp4download(url=url)
+                    downloader(url=url, format='mp4')
             else:
                 if 'mp3' in request.POST:
                     print('MP3 FORMAT')
                     print(BASE_DIR)
+                    downloader(url=url, format='mp3')
                 else:
                     print("NOTHING")
         else:
             print("ERROR WITH URL")
     return render(request, 'index.html')
         
-# mac de escuela - todas las paginas doubhle sided - tag mac = 35780
 # instalar impresora personal a color 310
 
-def my_hook(d):
-    if d['status'] == 'finished':
-        file_tuple = os.path.split(os.path.abspath(d['filename']))
-        print("Done downloading {}".format(file_tuple[1])) # print()
-    if d['status'] == 'downloading':
-        download_progress = str(d['_percent_str'])
-        print(download_progress)
+
         
 
-def mp4download(url):
-    # required to always get mp4 format for videos
-    ydl_opts = {'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4', 
-                'progress_hooks': [my_hook],
-                'quiet': True,
-                'progress': True,
-                'outtmpl': 'videos/%(id)s.%(ext)s'}
-        
+def downloader(url, format):
+    ydl_opts = MP4_YTDLP_OPTIONS if format == 'mp4' else MP3_YTDLP_OPTIONS
     # download the video
     with YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url]) # print()
-    
-        videoinfo = ydl.extract_info(url=url, download=False)
-        filename = str(ydl.prepare_filename(videoinfo))
-    
-    print(pexpect.run("{BASH_COMMAND} {FILE} {SIZE_LIMIT} \'{FFMPEG_ARGS}\'".format(
-        BASH_COMMAND='sh split-video.sh',
-        FILE=filename, 
-        SIZE_LIMIT='25000000', 
-        FFMPEG_ARGS='-c:v libx264 -crf 23 -c:a copy -vf scale=960:-1')))
+        ydl.download([url])
+        mediainfo = ydl.extract_info(url=url, download=False)
+        filename = str(ydl.prepare_filename(mediainfo))
+    if format == 'mp4':
+        pexpect.run("{BASH_COMMAND} {FILE} {SIZE_LIMIT} \'{FFMPEG_ARGS}\'".format(
+            BASH_COMMAND='sh split-video.sh',
+            FILE=filename, 
+            SIZE_LIMIT='25000000', 
+            FFMPEG_ARGS='-c:v libx264 -crf 23 -c:a copy -vf scale=960:-1'))
 
 
 def urlValidation(url):
