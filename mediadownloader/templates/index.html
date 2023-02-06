@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,22 +19,49 @@
             {% csrf_token %}
 
             <label for="link">Enter URL: </label>
-            <input type="text" name="link"><br><br>
+            <input type="text" name="link">
+            <br>
+            <div class="progress-wrapper">
+                <div id="progress-bar" class="progress-bar" style="background-color: #68a9ef; width: 0%;">
+                    &nbsp;
+                </div>
+            </div>
+            <div id="progress-bar-message">
+                Waiting for progress to start...
+            </div>
+            <script src="{% static 'celery_progress/celery_progress.js' %}">
+            </script>
+            <br>
             <button type="submit" name="mp4" onclick="mp4()">Download MP4</button>
             <button type="submit" name="mp3" onclick="mp3()">Download MP3</button>
 
         </form>
+        {% if task_id %}
         <script>
             function mp4(){
-                console.log("MP4")
+                console.log("MP4");
+                var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
+                CeleryProgressBar.initProgressBar(progressUrl);
                 // document.getElementById("message").innerHTML = "Downloading...";
             }
-
+        </script>
+        {% endif %}
+        {% if task_id %}
+        <script>
             function mp3(){
                 console.log("MP3")
                 // document.getElementById("message").innerHTML = "Downloading...";
             }
         </script>
+        {% endif %}
+        <!-- {% if task_id %}
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
+                CeleryProgressBar.initProgressBar(progressUrl);
+            });
+        </script>
+        {% endif %} -->
     </div>
 </body>
 </html>

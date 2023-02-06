@@ -1,18 +1,25 @@
 from __future__ import unicode_literals
 from django.shortcuts import render
+from .tasks import go_to_sleep
+from yt_dlp import YoutubeDL # https://github.com/yt-dlp/yt-dlp#embedding-yt-dlp
 import pexpect
 import os
 import re
-from yt_dlp import YoutubeDL # https://github.com/yt-dlp/yt-dlp#embedding-yt-dlp
 import subprocess
 
-def my_hook(d):
+NUMBERS_PATTERN = re.compile('[^0-9]|_')
+
+def my_hook(d):    
     if d['status'] == 'finished':
         file_tuple = os.path.split(os.path.abspath(d['filename']))
         print("Done downloading {}".format(file_tuple[1])) # print()
     if d['status'] == 'downloading':
-        download_progress = str(d['_percent_str'])
-        print(download_progress)
+        download_progress = str(d['_percent_str']).replace('%', '').strip()
+        download_progress = re.sub(NUMBERS_PATTERN, '', download_progress)[3:]
+        download_progress = float(download_progress) / 100
+        task = go_to_sleep.delay(download_progress, 100)
+        print(f'progress: {download_progress}')
+    return task
 
 # Source: https://regex101.com/r/vHEc61/1
 YOUTUBE_REGEX = r'^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$'
@@ -37,13 +44,13 @@ MP3_YTDLP_OPTIONS = {
 }
 
 
-def main(request):
+def index(request):
+    context = {}
     if request.method == 'GET':
         print('enviando formulario')
-        return render(request, 'index.html', {
-            'msg': 'test',
-        })
-        
+        context['msg'] = 'test'
+        context['task'] = None
+
     else: # POST
         # get url from the html form
         url = str(request.POST['link']).strip()
@@ -52,6 +59,9 @@ def main(request):
         if urlValidation(url=url):
             print('recibiendo formulario')
             if 'mp4' in request.POST:
+                    # task = go_to_sleep.delay(5)
+                    context['task'] = task.task_id
+                    context['msg'] = 'post'
                     print('MP4 FORMAT')
                     print(BASE_DIR)
                     downloader(url=url, format='mp4')
@@ -64,12 +74,9 @@ def main(request):
                     print("NOTHING")
         else:
             print("ERROR WITH URL")
-    return render(request, 'index.html')
-        
-# instalar impresora personal a color 310
-
-
-        
+    
+    return render(request, 'index.html', context)
+                
 
 def downloader(url, format):
     ydl_opts = MP4_YTDLP_OPTIONS if format == 'mp4' else MP3_YTDLP_OPTIONS
