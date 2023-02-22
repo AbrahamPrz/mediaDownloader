@@ -7,4 +7,4 @@ from time import sleep
 def go_to_sleep(self, progress, total):
     progress_recorder = ProgressRecorder(self)
     progress_recorder.set_progress(progress, total, 'On iteration')
-    # return 'Done'
+    return 'Done'
