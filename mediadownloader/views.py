@@ -9,6 +9,8 @@ import subprocess
 
 NUMBERS_PATTERN = re.compile('[^0-9]|_')
 
+global_task = None
+
 def my_hook(d):    
     if d['status'] == 'finished':
         file_tuple = os.path.split(os.path.abspath(d['filename']))
@@ -17,9 +19,9 @@ def my_hook(d):
         download_progress = str(d['_percent_str']).replace('%', '').strip()
         download_progress = re.sub(NUMBERS_PATTERN, '', download_progress)[3:]
         download_progress = float(download_progress) / 100
-        task = go_to_sleep.delay(download_progress, 100)
+        # global_task = go_to_sleep.delay(download_progress, 100)
         print(f'progress: {download_progress}')
-    return task
+    return None # global_task
 
 # Source: https://regex101.com/r/vHEc61/1
 YOUTUBE_REGEX = r'^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$'
@@ -59,8 +61,9 @@ def index(request):
         if urlValidation(url=url):
             print('recibiendo formulario')
             if 'mp4' in request.POST:
-                    # task = go_to_sleep.delay(5)
-                    context['task'] = task.task_id
+                    # task = go_to_sleep.delay(progress=, total=)
+                    # context['global_task'] = global_task.task_id
+                    context['task'] = None
                     context['msg'] = 'post'
                     print('MP4 FORMAT')
                     print(BASE_DIR)
