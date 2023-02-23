@@ -4,16 +4,16 @@ venv:
 	source .venv/bin/activate
 
 run:
-	python manage.py runserver
+	python3 manage.py runserver
 
 migration:
-	python manage.py makemigrations
+	python3 manage.py makemigrations
 
 migrate:
-	python manage.py migrate
+	python3 manage.py migrate
 
 superuser:
-	python manage.py createsuperuser
+	python3 manage.py createsuperuser
 
 celery:
 	celery -A mysite worker -l info
