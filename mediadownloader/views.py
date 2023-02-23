@@ -31,7 +31,7 @@ FACEBOOK_REGEX = r'^https?:\/\/www\.facebook\.com.*\/(video(s)?|watch|story)(\.p
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 MP4_YTDLP_OPTIONS = {'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4', 
-    'outtmpl': 'video/%(title)s', 
+    'outtmpl': 'media/video/%(title)s', 
     'progress_hooks': [my_hook],
     'quiet': True,
     # '-loglevel': 'panic',
@@ -39,6 +39,7 @@ MP4_YTDLP_OPTIONS = {'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
 }
 MP3_YTDLP_OPTIONS = {
     'format': 'mp3/bestaudio/best',
+    'outtmpl': 'media/audio/%(title)s',
     'postprocessors': [{  # Extract audio using ffmpeg
         'key': 'FFmpegExtractAudio',
         'preferredcodec': 'mp3',
